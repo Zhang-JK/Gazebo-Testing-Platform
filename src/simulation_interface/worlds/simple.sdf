@@ -1,5 +1,13 @@
 <sdf version='1.7'>
   <world name='default'>
+    <plugin name='gazebo_occupancy_map' filename='libgazebo_2Dmap_plugin.so'>
+      <map_resolution>0.15</map_resolution> <!-- in meters, optional, default 0.1 -->
+      <map_height>0.3</map_height> <!-- in meters, optional, default 0.3 -->
+      <map_size_x>20</map_size_x> <!-- in meters, optional, default 10 -->
+      <map_size_y>20</map_size_y> <!-- in meters, optional, default 10 -->
+      <init_robot_x>1</init_robot_x> <!-- x coordinate in meters, optional, default 0 -->
+      <init_robot_y>1</init_robot_y> <!-- y coordinate in meters, optional, default 0 -->
+    </plugin>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
@@ -542,10 +550,10 @@
       <static>1</static>
     </model>
     <state world_name='default'>
-      <sim_time>38 538000000</sim_time>
-      <real_time>38 804106361</real_time>
-      <wall_time>1669041876 724778003</wall_time>
-      <iterations>38538</iterations>
+      <sim_time>78 222000000</sim_time>
+      <real_time>39 892319323</real_time>
+      <wall_time>1671089122 192890379</wall_time>
+      <iterations>39684</iterations>
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -626,7 +634,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>5 -5 2 0 0.275643 2.35619</pose>
+        <pose>4.55272 4.37994 21.7175 3.14159 1.57079 3.14159</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>

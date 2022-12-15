@@ -89,7 +89,7 @@ void joyConCB(const sensor_msgs::Joy::ConstPtr &msg)
     }
     else {
         ang = abs(msg.get()->axes[0]) < 0.05 ? 0 : msg.get()->axes[0]*2;
-        lin = abs(msg.get()->axes[4]) < 0.05 ? 0 : msg.get()->axes[4]*1.5;
+        lin = abs(msg.get()->axes[3]) < 0.05 ? 0 : msg.get()->axes[3]*1.5;
     }
     if ((ang != 0 || ang == 0 && lastO == 0) && (lin != 0|| lin == 0 && lastX == 0) && abs(ang - lastO) <= 0.1 && abs(lin - lastX) <= 0.2)
         return ;

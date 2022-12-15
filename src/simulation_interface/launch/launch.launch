@@ -8,7 +8,7 @@
   <include file="$(find robot_controller)/launch/control.launch" />
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find simulation_interface)/worlds/simple-2.sdf"/>
+    <arg name="world_name" value="$(find simulation_interface)/worlds/simple.sdf"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>

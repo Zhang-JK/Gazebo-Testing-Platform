@@ -9,7 +9,7 @@
   <include file="$(find simulation_interface)/launch/launch.launch" />
 
   <!-- Map server -->
-  <node pkg="map_server" name="map_server" type="map_server" args="$(find robot_mapping)/maps/map.yaml" />
+  <node pkg="map_server" name="map_server" type="map_server" args="$(find robot_mapping)/maps/simple-real.yaml" />
 
   <!-- AMCL -->
   <include file="$(find turtlebot3_navigation)/launch/amcl.launch">
@@ -24,8 +24,8 @@
   </include>
 
   <!-- rviz -->
-  <group if="$(arg open_rviz)"> 
+  <group if="$(arg open_rviz)">
     <node pkg="rviz" type="rviz" name="rviz" required="true"
-          args="-d $(find robot_navigation)/rviz/nav.rviz"/>
+      args="-d $(find robot_navigation)/rviz/nav.rviz" />
   </group>
 </launch>

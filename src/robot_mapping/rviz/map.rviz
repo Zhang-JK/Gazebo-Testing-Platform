@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
         - /TF1/Frames1
         - /Odometry1
       Splitter Ratio: 0.5
@@ -71,10 +70,6 @@ Visualization Manager:
         All Enabled: false
         base_footprint:
           Value: true
-        base_scan:
-          Value: false
-        map:
-          Value: true
         odom:
           Value: true
       Marker Alpha: 1
@@ -84,11 +79,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_footprint:
-              base_scan:
-                {}
+        {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -125,6 +116,16 @@ Visualization Manager:
         Value: Arrow
       Topic: /real_pos
       Unreliable: false
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /map2d
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
