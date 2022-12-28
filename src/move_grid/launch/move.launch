@@ -9,8 +9,15 @@
 
   <include file="$(find simulation_interface)/launch/launch.launch" />
 
+  <!-- <node pkg="joy" name="joy_node" type="joy_node">
+		<param name="~dev_ff" value="/dev/input/event13" />
+	</node> -->
+
   <!-- Map server -->
   <node pkg="map_server" name="map_server" type="map_server" args="$(find robot_mapping)/maps/simple-real.yaml" />
+
+  <!-- Move base -->
+  <node pkg="move_grid" name="move_grid" type="move_grid.py" output="screen" />
 
   <!-- AMCL -->
   <!-- No need for real pos -->
@@ -19,15 +26,9 @@
     <arg name="initial_pose_y" value="1.0" />
   </include> -->
 
-  <!-- move_base -->
-  <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
-    <arg name="model" value="$(arg model)" />
-    <arg name="move_forward_only" value="$(arg move_forward_only)" />
-  </include>
-
   <!-- rviz -->
   <group if="$(arg open_rviz)">
     <node pkg="rviz" type="rviz" name="rviz" required="true"
-      args="-d $(find robot_navigation)/rviz/nav.rviz" />
+      args="-d $(find move_grid)/rviz/move.rviz" />
   </group>
 </launch>

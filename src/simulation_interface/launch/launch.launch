@@ -1,7 +1,7 @@
 <launch>
   <arg name="model" default="burger" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="1"/>
-  <arg name="y_pos" default="1"/>
+  <arg name="x_pos" default="0.975"/>
+  <arg name="y_pos" default="0.975"/>
   <arg name="z_pos" default="0.0"/>
   <rosparam command="load" file="$(find simulation_interface)/params/bot.yaml" />
 
