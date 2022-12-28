@@ -17,7 +17,7 @@
   <node pkg="map_server" name="map_server" type="map_server" args="$(find robot_mapping)/maps/simple-real.yaml" />
 
   <!-- Move base -->
-  <node pkg="move_grid" name="move_grid" type="move_grid.py" output="screen" />
+  <node pkg="move_grid" name="move_grid" type="move_grid" output="screen" />
 
   <!-- AMCL -->
   <!-- No need for real pos -->

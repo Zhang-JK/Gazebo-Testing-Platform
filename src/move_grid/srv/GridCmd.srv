@@ -1,0 +1,6 @@
+string cmd
+int32 value
+---
+bool state
+string msg
+geometry_msgs/Point current

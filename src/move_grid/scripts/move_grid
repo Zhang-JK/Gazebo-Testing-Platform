@@ -1,0 +1,104 @@
+import rospy
+
+from nav_msgs.msg import Odometry
+from move_grid.srv import GridCmd, GridCmdResponse
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Twist
+from tf.transformations import euler_from_quaternion
+
+GRID_SIZE = 0.15
+DIR_2_YAW = {'F': 0, 'B': 180, 'L': 90, 'R': -90}
+DIR_2_MOVE = {'F': (0, 1), 'B': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
+MAX_X = 100
+MAX_Y = 100
+
+current_pos = (0, 0)
+current_grid = (0, 0)
+target_pos = (0, 0)
+target_grid = (0, 0)
+current_yaw = 0
+target_yaw = 0
+moving = False
+
+
+def errorCal(target, current):
+    return (target - current + 180) % 360 - 180
+
+
+def saturateFunc(ratio, maxVal, minVal, x): 
+    if abs(x * ratio) > maxVal:
+        return maxVal if x > 0 else -maxVal
+    elif abs(x * ratio) < minVal:
+        return minVal if x > 0 else -minVal
+    else:
+        return x * ratio
+
+
+def posToGrid(x, y):
+    return (int(x // GRID_SIZE), int(y // GRID_SIZE))
+
+
+def gridToPos(x, y):
+    return (x * GRID_SIZE + GRID_SIZE / 2, y * GRID_SIZE + GRID_SIZE / 2)
+
+
+def handle_odom(msg):
+    global current_pos, current_grid, current_yaw
+    current_pos = (msg.pose.pose.position.x, msg.pose.pose.position.y)
+    current_yaw_q = euler_from_quaternion([msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w])[2]
+    current_yaw = current_yaw_q * 180 / 3.1415926
+    current_grid = posToGrid(current_pos[0], current_pos[1])
+
+
+def handle_cmd(req):
+    global target_pos, target_grid, target_yaw, moving
+    if req.cmd == 'G':
+        return GridCmdResponse(True, '', Point(current_grid[0], current_grid[1], 0))
+    if req.cmd not in DIR_2_YAW:
+        return GridCmdResponse(False, 'invalid command', Point(current_grid[0], current_grid[1], 0))
+    if moving:
+        return GridCmdResponse(False, 'in progress', Point(current_grid[0], current_grid[1], 0))
+    temp_target_grid = (current_grid[0] + DIR_2_MOVE[req.cmd][0], current_grid[1] + DIR_2_MOVE[req.cmd][1])
+    if temp_target_grid[0] < 0 or temp_target_grid[0] >= MAX_X or temp_target_grid[1] < 0 or temp_target_grid[1] >= MAX_Y:
+        return GridCmdResponse(False, 'out of range', Point(current_grid[0], current_grid[1], 0))
+    target_grid = temp_target_grid
+    target_pos = gridToPos(target_grid[0], target_grid[1])
+    target_yaw = DIR_2_YAW[req.cmd]
+    moving = True
+    print(target_yaw, current_yaw)
+    return GridCmdResponse(True, 'moving', Point(current_grid[0], current_grid[1], 0))
+
+if __name__ == '__main__':
+    rospy.init_node('move_grid')
+    rospy.Subscriber('/real_pos', Odometry, handle_odom)
+    s = rospy.Service('grid_cmd', GridCmd, handle_cmd)
+    pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+    while not rospy.is_shutdown():
+        if moving:
+            while abs(errorCal(target_yaw, current_yaw)) > 0.2 and (not rospy.is_shutdown()):
+                twist = Twist()
+                twist.angular.z = saturateFunc(0.01, 0.4, 0.1, errorCal(target_yaw, current_yaw))
+                pubVel.publish(twist)
+                print(current_yaw)
+                rospy.sleep(0.01)
+            twist = Twist()
+            pubVel.publish(twist)
+            rospy.sleep(1)
+            # while (abs(target_pos[0] - current_pos[0]) > 0.05 or abs(target_pos[1] - current_pos[1]) > 0.05)  and (not rospy.is_shutdown()):
+            #     twist = Twist()
+            #     twist.linear.x = 0.05
+            #     pubVel.publish(twist)
+            #     rospy.sleep(0.002)
+            twist = Twist()
+            pubVel.publish(twist)
+            rospy.loginfo('Moving Done, End at: (%d, %d)', current_grid[0], current_grid[1])
+            moving = False
+        else: 
+            twist = Twist()
+            pubVel.publish(twist)
+            rospy.sleep(0.05)
+
+    rospy.spin()
+
+        
