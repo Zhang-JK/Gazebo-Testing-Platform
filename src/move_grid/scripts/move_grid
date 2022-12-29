@@ -8,9 +8,17 @@ from tf.transformations import euler_from_quaternion
 
 GRID_SIZE = 0.15
 DIR_2_YAW = {'F': 0, 'B': 180, 'L': 90, 'R': -90}
-DIR_2_MOVE = {'F': (0, 1), 'B': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
-MAX_X = 100
-MAX_Y = 100
+DIR_2_MOVE = {'F': (1, 0), 'B': (-1, 0), 'L': (0, 1), 'R': (0, -1)}
+DIR_2_ERROR = {'F': (0, 1), 'B': (0, -1), 'L': (1, 0), 'R': (-1, 0)}
+
+MAX_X = 65
+MAX_Y = 65
+disPIDParam = {'kp': 0.03, 'ki': 0.0001, 'kd': 0.001}
+anglePIDParam = {'kp': 0.05, 'ki': 0.001, 'kd': 0.01}
+maxAngleSpeed = 0.4
+minAngleSpeed = 0.1
+maxTransSpeed = 0.2
+updateRate = 100
 
 current_pos = (0, 0)
 current_grid = (0, 0)
@@ -18,7 +26,9 @@ target_pos = (0, 0)
 target_grid = (0, 0)
 current_yaw = 0
 target_yaw = 0
-moving = False
+moving = None
+errorSum = {}
+lastError = {}
 
 
 def errorCal(target, current):
@@ -32,6 +42,25 @@ def saturateFunc(ratio, maxVal, minVal, x):
         return minVal if x > 0 else -minVal
     else:
         return x * ratio
+
+
+def pid(error, param, item):
+    global errorSum, lastError
+    if item not in errorSum:
+        errorSum[item] = 0
+        lastError[item] = 0
+    errorSum[item] += error
+    errorDiff = error - lastError[item]
+    lastError[item] = error
+    return error * param['kp'] + errorSum[item] * param['ki'] + errorDiff * param['kd']
+
+
+def calAngleSpeed():
+    angleError = errorCal(target_yaw, current_yaw)
+    errorTuple = (target_pos[0] - current_pos[0], target_pos[1] - current_pos[1])
+    displacementError = errorTuple[0]*DIR_2_ERROR[moving][0] + errorTuple[1]*DIR_2_ERROR[moving][1]
+    # print(angleError, displacementError)
+    return pid(angleError, anglePIDParam, 'angle') + pid(displacementError, disPIDParam, 'displacement')
 
 
 def posToGrid(x, y):
@@ -58,14 +87,13 @@ def handle_cmd(req):
         return GridCmdResponse(False, 'invalid command', Point(current_grid[0], current_grid[1], 0))
     if moving:
         return GridCmdResponse(False, 'in progress', Point(current_grid[0], current_grid[1], 0))
-    temp_target_grid = (current_grid[0] + DIR_2_MOVE[req.cmd][0], current_grid[1] + DIR_2_MOVE[req.cmd][1])
+    temp_target_grid = (current_grid[0] + DIR_2_MOVE[req.cmd][0]*req.value, current_grid[1] + DIR_2_MOVE[req.cmd][1]*req.value)
     if temp_target_grid[0] < 0 or temp_target_grid[0] >= MAX_X or temp_target_grid[1] < 0 or temp_target_grid[1] >= MAX_Y:
         return GridCmdResponse(False, 'out of range', Point(current_grid[0], current_grid[1], 0))
     target_grid = temp_target_grid
     target_pos = gridToPos(target_grid[0], target_grid[1])
     target_yaw = DIR_2_YAW[req.cmd]
-    moving = True
-    print(target_yaw, current_yaw)
+    moving = req.cmd
     return GridCmdResponse(True, 'moving', Point(current_grid[0], current_grid[1], 0))
 
 if __name__ == '__main__':
@@ -75,29 +103,29 @@ if __name__ == '__main__':
     pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
     while not rospy.is_shutdown():
-        if moving:
+        if moving is not None:
             while abs(errorCal(target_yaw, current_yaw)) > 0.2 and (not rospy.is_shutdown()):
                 twist = Twist()
-                twist.angular.z = saturateFunc(0.01, 0.4, 0.1, errorCal(target_yaw, current_yaw))
+                twist.angular.z = saturateFunc(0.01, maxAngleSpeed, minAngleSpeed, errorCal(target_yaw, current_yaw))
                 pubVel.publish(twist)
-                print(current_yaw)
-                rospy.sleep(0.01)
+                rospy.sleep(1/updateRate)
             twist = Twist()
             pubVel.publish(twist)
             rospy.sleep(1)
-            # while (abs(target_pos[0] - current_pos[0]) > 0.05 or abs(target_pos[1] - current_pos[1]) > 0.05)  and (not rospy.is_shutdown()):
-            #     twist = Twist()
-            #     twist.linear.x = 0.05
-            #     pubVel.publish(twist)
-            #     rospy.sleep(0.002)
+            while (abs(target_pos[0] - current_pos[0]) > 0.05 or abs(target_pos[1] - current_pos[1]) > 0.05)  and (not rospy.is_shutdown()):
+                twist = Twist()
+                twist.linear.x = maxTransSpeed
+                twist.angular.z = calAngleSpeed()
+                pubVel.publish(twist)
+                rospy.sleep(1/updateRate)
             twist = Twist()
             pubVel.publish(twist)
             rospy.loginfo('Moving Done, End at: (%d, %d)', current_grid[0], current_grid[1])
-            moving = False
+            moving = None
         else: 
             twist = Twist()
             pubVel.publish(twist)
-            rospy.sleep(0.05)
+            rospy.sleep(1/updateRate)
 
     rospy.spin()
 
