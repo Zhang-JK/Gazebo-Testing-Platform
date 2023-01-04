@@ -59,7 +59,6 @@ def calAngleSpeed():
     angleError = errorCal(target_yaw, current_yaw)
     errorTuple = (target_pos[0] - current_pos[0], target_pos[1] - current_pos[1])
     displacementError = errorTuple[0]*DIR_2_ERROR[moving][0] + errorTuple[1]*DIR_2_ERROR[moving][1]
-    # print(angleError, displacementError)
     return pid(angleError, anglePIDParam, 'angle') + pid(displacementError, disPIDParam, 'displacement')
 
 
@@ -98,6 +97,16 @@ def handle_cmd(req):
 
 if __name__ == '__main__':
     rospy.init_node('move_grid')
+    GRID_SIZE = rospy.get_param("/grid_map/grid_size", GRID_SIZE)
+    MAX_X = rospy.get_param("/grid_map/max_x", MAX_X)
+    MAX_Y = rospy.get_param("/grid_map/max_y", MAX_Y)
+    disPIDParam['kp'] = rospy.get_param("/grid_map/trans_kp", disPIDParam['kp'])
+    disPIDParam['ki'] = rospy.get_param("/grid_map/trans_ki", disPIDParam['ki'])
+    disPIDParam['kd'] = rospy.get_param("/grid_map/trans_kd", disPIDParam['kd'])
+    anglePIDParam['kp'] = rospy.get_param("/grid_map/angle_kp", anglePIDParam['kp'])
+    anglePIDParam['ki'] = rospy.get_param("/grid_map/angle_ki", anglePIDParam['ki'])
+    anglePIDParam['kd'] = rospy.get_param("/grid_map/angle_kd", anglePIDParam['kd'])
+
     rospy.Subscriber('/real_pos', Odometry, handle_odom)
     s = rospy.Service('grid_cmd', GridCmd, handle_cmd)
     pubVel = rospy.Publisher('/cmd_vel', Twist, queue_size=10)

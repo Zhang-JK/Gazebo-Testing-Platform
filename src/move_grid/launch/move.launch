@@ -2,7 +2,9 @@
   <!-- Arguments -->
   <arg name="open_rviz" default="true" />
   <arg name="move_forward_only" default="false" />
+  <arg name="/grid_file" default="/home/laojk/Code/Gazebo-Testing-Platform/src/move_grid/command/movement.txt" />
   <arg name="model" default="burger" doc="model type [burger, waffle, waffle_pi]" />
+  <rosparam file="$(find move_grid)/config/params.yml" />
 
   <node pkg="tf" type="static_transform_publisher" name="scan2base" args="0 0 0 0 0 0 base_footprint base_scan 100" />
   <node pkg="tf" type="static_transform_publisher" name="map2odom" args="0 0 0 0 0 0 map odom 100" />
@@ -18,14 +20,9 @@
 
   <!-- Move base -->
   <node pkg="move_grid" name="move_grid" type="move_grid" output="screen" />
-  <node pkg="move_grid" name="grid_decode" type="grid_decode" output="screen" />
-
-  <!-- AMCL -->
-  <!-- No need for real pos -->
-  <!-- <include file="$(find turtlebot3_navigation)/launch/amcl.launch">
-    <arg name="initial_pose_x" value="1.0" />
-    <arg name="initial_pose_y" value="1.0" />
-  </include> -->
+  <node pkg="move_grid" name="grid_decode" type="grid_decode" output="screen">
+    <param name="/grid_file" value="$(arg /grid_file)" />
+  </node>
 
   <!-- rviz -->
   <group if="$(arg open_rviz)">

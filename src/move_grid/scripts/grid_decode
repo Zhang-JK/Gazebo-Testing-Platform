@@ -25,10 +25,11 @@ def getDir(cur, last):
 
 
 if __name__ == '__main__':
+    rospy.init_node('grid_decode')
+    COMMAND_FILE = rospy.get_param("/grid_file", COMMAND_FILE)
+
     with open(COMMAND_FILE) as file:
         lines = [decode(line.rstrip()) for line in file]
-
-    rospy.init_node('grid_decode')
 
     seq = []
     direction = ''
@@ -51,6 +52,7 @@ if __name__ == '__main__':
     rospy.wait_for_service('grid_cmd')
     cmd = rospy.ServiceProxy('grid_cmd', GridCmd)
     rospy.sleep(5)
+    print(COMMAND_FILE)
     for c in seq: 
         try:
             while not cmd(c[0], c[1]).state:
