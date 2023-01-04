@@ -1,0 +1,62 @@
+import rospy
+import re
+from move_grid.srv import GridCmd, GridCmdResponse
+
+COMMAND_FILE = '/home/laojk/Code/Gazebo-Testing-Platform/src/move_grid/command/movement.txt'
+
+def decode(line):
+    line.split(',')
+    m1 = int(re.search(r"([0-9]+)", line.split(',')[0]).group(0))
+    m2 = int(re.search(r"([0-9]+)", line.split(',')[1]).group(0))
+    return (m1, m2)
+
+
+def getDir(cur, last):
+    if cur[0] > last[0]:
+        return ('F', cur[0] - last[0])
+    elif cur[0] < last[0]:
+        return ('B', last[0] - cur[0])
+    elif cur[1] > last[1]:
+        return ('L', cur[1] - last[1])
+    elif cur[1] < last[1]:
+        return ('R', last[1] - cur[1])
+    else:
+        return ('', 0)
+
+
+if __name__ == '__main__':
+    with open(COMMAND_FILE) as file:
+        lines = [decode(line.rstrip()) for line in file]
+
+    rospy.init_node('grid_decode')
+
+    seq = []
+    direction = ''
+    distance = 0
+    pos = lines[0]
+    for (x, y) in lines:
+        if direction == '':
+            temp = getDir((x, y), pos)
+            direction = temp[0]
+            distance = temp[1]
+        elif direction == getDir((x, y), pos)[0]:
+            distance += getDir((x, y), pos)[1]
+        else:
+            seq.append((direction, distance))
+            direction = getDir((x, y), pos)[0]
+            distance = getDir((x, y), pos)[1]
+        pos = (x, y)
+    seq.append((direction, distance))
+    
+    rospy.wait_for_service('grid_cmd')
+    cmd = rospy.ServiceProxy('grid_cmd', GridCmd)
+    rospy.sleep(5)
+    for c in seq: 
+        try:
+            while not cmd(c[0], c[1]).state:
+                rospy.sleep(1)
+            rospy.loginfo("Command (%s, %d) Executing" % (c[0], c[1]))
+        except rospy.ServiceException as e:
+            print("Service call failed: %s"%e)
+        rospy.sleep(1)
+    rospy.loginfo("Command Sequence Executed")

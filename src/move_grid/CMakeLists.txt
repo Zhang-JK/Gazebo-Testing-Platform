@@ -32,5 +32,6 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   scripts/move_grid
+  scripts/grid_decode
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

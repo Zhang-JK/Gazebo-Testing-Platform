@@ -113,6 +113,10 @@ if __name__ == '__main__':
             pubVel.publish(twist)
             rospy.sleep(1)
             while (abs(target_pos[0] - current_pos[0]) > 0.05 or abs(target_pos[1] - current_pos[1]) > 0.05)  and (not rospy.is_shutdown()):
+                if DIR_2_MOVE[moving][0] * (target_pos[0] - current_pos[0]) < -0.05 or DIR_2_MOVE[moving][1] * (target_pos[1] - current_pos[1]) < -0.05:
+                    rospy.loginfo('Moving Break Due to Possible Route Deviation, End at: (%d, %d)', current_grid[0], current_grid[1])
+                    break
+                    
                 twist = Twist()
                 twist.linear.x = maxTransSpeed
                 twist.angular.z = calAngleSpeed()

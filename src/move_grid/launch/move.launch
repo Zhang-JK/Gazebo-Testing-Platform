@@ -18,6 +18,7 @@
 
   <!-- Move base -->
   <node pkg="move_grid" name="move_grid" type="move_grid" output="screen" />
+  <node pkg="move_grid" name="grid_decode" type="grid_decode" output="screen" />
 
   <!-- AMCL -->
   <!-- No need for real pos -->
